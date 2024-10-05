@@ -50,7 +50,7 @@ class HomeScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final lottery = lotteries[index];
                 return Card(
-                  margin: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  margin: EdgeInsets.symmetric(vertical: 10, horizontal: 16), //SÓ TESTANDO
                   child: ListTile(
                     title: Text(lottery['name']!),
                     trailing: Icon(Icons.arrow_forward_ios),
