@@ -1,6 +1,6 @@
 # lotoapp
 
-A new Flutter project.
+App em Flutter para ver os resultados de loterias.
 
 ## Getting Started
 
