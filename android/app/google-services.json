@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "259678393427",
+    "project_id": "loto-app-fcd52",
+    "storage_bucket": "loto-app-fcd52.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:259678393427:android:5af4a0b042ffe88702e2a6",
+        "android_client_info": {
+          "package_name": "com.example.lotoapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2D0DAVDhxcFRi6ytvOsLenYErWU8_VBs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
