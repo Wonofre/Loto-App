@@ -6,6 +6,8 @@ import '../services/api_service.dart';
 import 'history_screen.dart'; // Import the History Screen
 
 class ResultScreen extends StatefulWidget {
+  const ResultScreen({super.key});
+
   @override
   _ResultScreenState createState() => _ResultScreenState();
 }
@@ -38,9 +40,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
     LotteryResult? result = await ApiService.getCachedResult(apiName);
 
-    if (result == null) {
-      result = await ApiService.fetchLatestResult(apiName);
-    }
+    result ??= await ApiService.fetchLatestResult(apiName);
 
     setState(() {
       lotteryResult = result;
@@ -61,10 +61,12 @@ class _ResultScreenState extends State<ResultScreen> {
         'date': lotteryResult!.dataApuracao,
         'concurso': lotteryResult!.numero,
         'matchedNumbers': selectedNumbers
-            .where((number) => lotteryResult!.listaDezenas.contains(number.toString()))
+            .where((number) =>
+                lotteryResult!.listaDezenas.contains(number.toString()))
             .toList(),
         'numCorrect': selectedNumbers
-            .where((number) => lotteryResult!.listaDezenas.contains(number.toString()))
+            .where((number) =>
+                lotteryResult!.listaDezenas.contains(number.toString()))
             .length,
       };
 
@@ -103,14 +105,16 @@ class _ResultScreenState extends State<ResultScreen> {
       );
     }
 
-    List<int> drawnNumbers = lotteryResult!.listaDezenas.map(int.parse).toList();
+    List<int> drawnNumbers =
+        lotteryResult!.listaDezenas.map(int.parse).toList();
     List<int> matchedNumbers = selectedNumbers
         .where((number) => drawnNumbers.contains(number))
         .toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Resultado do Concurso ${lotteryResult!.numero} - ${lottery!['name']}'),
+        title: Text(
+            'Resultado do Concurso ${lotteryResult!.numero} - ${lottery!['name']}'),
       ),
       body: Padding(
         padding: EdgeInsets.all(16),
@@ -173,12 +177,11 @@ class _ResultScreenState extends State<ResultScreen> {
             Text(
               'Você acertou ${matchedNumbers.length} números!',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              
             ),
             Text(
-                'Próximo concurso estimado em: R\$ ${lotteryResult!.valorAcumuladoProximoConcurso.toStringAsFixed(2)}',
-                style: TextStyle(fontSize: 16),
-             ),
+              'Próximo concurso estimado em: R\$ ${lotteryResult!.valorAcumuladoProximoConcurso.toStringAsFixed(2)}',
+              style: TextStyle(fontSize: 16),
+            ),
             SizedBox(height: 20),
 
             // Save to History Button
@@ -190,7 +193,8 @@ class _ResultScreenState extends State<ResultScreen> {
             // Continue Checking Button
             ElevatedButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/manual_entry', arguments: lottery);
+                Navigator.pushNamed(context, '/manual_entry',
+                    arguments: lottery);
               },
               child: Text('Continuar Conferindo'),
             ),

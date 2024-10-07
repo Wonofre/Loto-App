@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart'; // Import the package
 import 'screens/home_screen.dart';
 import 'screens/manual_entry_screen.dart';
 import 'screens/result_screen.dart';
 import 'screens/history_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize the Mobile Ads SDK
+  final InitializationStatus initializationStatus =
+      await MobileAds.instance.initialize();
+
   runApp(LoteriasApp());
 }
 
 class LoteriasApp extends StatelessWidget {
-   @override
+  const LoteriasApp({super.key});
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Loterias - Resultado Fácil',

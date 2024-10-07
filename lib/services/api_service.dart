@@ -28,7 +28,8 @@ class ApiService {
   }
 
   // Método para cachear o resultado
-  static Future<void> _cacheResult(String lotteryName, Map<String, dynamic> data) async {
+  static Future<void> _cacheResult(
+      String lotteryName, Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
     final resultJson = json.encode(data);
     await prefs.setString('cached_$lotteryName', resultJson);

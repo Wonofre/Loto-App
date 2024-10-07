@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
 class ManualEntryScreen extends StatefulWidget {
+  const ManualEntryScreen({super.key});
+
   @override
   _ManualEntryScreenState createState() => _ManualEntryScreenState();
 }
 
 class _ManualEntryScreenState extends State<ManualEntryScreen> {
   Map<String, String>? lottery;
-  List<int> _selectedNumbers = [];
+  final List<int> _selectedNumbers = [];
   int maxNumbers = 15; // Padrão para Lotofácil
   int totalNumbers = 25; // Padrão para Lotofácil
 
@@ -107,7 +109,6 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
           Padding(
             padding: EdgeInsets.all(16),
             child: ElevatedButton(
-              child: Text('Conferir Resultados'),
               onPressed: _selectedNumbers.length == maxNumbers
                   ? () {
                       Navigator.pushNamed(
@@ -120,6 +121,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                       );
                     }
                   : null,
+              child: Text('Conferir Resultados'),
             ),
           ),
         ],
