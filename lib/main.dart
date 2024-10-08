@@ -1,47 +1,57 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart'; // Import the package
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'screens/home_screen.dart';
-import 'screens/manual_entry_screen.dart';
-import 'screens/result_screen.dart';
 import 'screens/history_screen.dart';
+import 'screens/manual_entry_screen.dart';
+import 'screens/multiple_entry_screen.dart';
+import 'screens/result_screen.dart';
+import 'screens/result_multiple_screen.dart';
+import 'utils/ad_manager.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize the Mobile Ads SDK
-  final InitializationStatus initializationStatus =
-      await MobileAds.instance.initialize();
-
-  runApp(LoteriasApp());
+  MobileAds.instance.initialize();
+  AdManager.loadInterstitialAd(); // Inicializa o anúncio intersticial
+  runApp(const LotteryApp());
 }
 
-class LoteriasApp extends StatelessWidget {
-  const LoteriasApp({super.key});
+class LotteryApp extends StatelessWidget {
+  const LotteryApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Loterias - Resultado Fácil',
-      initialRoute: '/',
-      routes: {
-        '/': (context) => HomeScreen(),
-        '/manual_entry': (context) => ManualEntryScreen(),
-        '/result': (context) => ResultScreen(),
-        '/history': (context) => HistoryScreen(),
-      },
       theme: ThemeData(
-        primaryColor: Color.fromARGB(255, 17, 89, 197), // Cor primária (roxo)
-        hintColor: Color.fromARGB(255, 255, 255, 255), // Cor de destaque
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: AppBarTheme(
-          color: Color.fromARGB(255, 3, 104, 235),
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+        fontFamily: 'Roboto',
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          elevation: 4,
+          centerTitle: true,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color.fromARGB(221, 255, 166, 0), // Cor dos botões
+            backgroundColor: Colors.blue, // Cor de fundo
+            foregroundColor: Colors.white, // Cor do texto
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         ),
       ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const HomeScreen(),
+        '/history': (context) => const HistoryScreen(),
+        '/manual_entry': (context) => const ManualEntryScreen(),
+        '/multiple_entry': (context) => const MultipleEntryScreen(),
+        '/result': (context) => const ResultScreen(),
+        '/result_multiple': (context) => const ResultMultipleScreen(),
+      },
     );
   }
 }

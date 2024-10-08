@@ -1,5 +1,8 @@
+// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../utils/ad_manager.dart';
+import '../widgets/banner_ad_widget.dart';
+import '../widgets/custom_app_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -9,163 +12,108 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late BannerAd _bannerAd;
-  bool _isBannerAdReady = false;
-
-  InterstitialAd? _interstitialAd;
-  bool _isInterstitialAdReady = false;
-
   final List<Map<String, String>> lotteries = [
     {'name': 'Lotofácil', 'apiName': 'lotofacil'},
     {'name': 'Mega-Sena', 'apiName': 'megasena'},
     {'name': 'Quina', 'apiName': 'quina'},
     {'name': 'Lotomania', 'apiName': 'lotomania'},
-    {'name': 'Timemania', 'apiName': 'timemania'},
     {'name': 'Dupla Sena', 'apiName': 'duplasena'},
-    {'name': 'Loteca', 'apiName': 'loteca'},
-    {'name': 'Federal', 'apiName': 'federal'},
-    {'name': 'Dia de Sorte', 'apiName': 'diadesorte'},
-    {'name': 'Super Sete', 'apiName': 'supersete'},
   ];
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Initialize Banner Ad
-    _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Test ID
-      request: AdRequest(),
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (_) {
-          setState(() {
-            _isBannerAdReady = true;
-          });
-        },
-        onAdFailedToLoad: (ad, error) {
-          print('BannerAd failed to load: $error');
-          _isBannerAdReady = false;
-          ad.dispose();
-        },
-      ),
-    );
-    _bannerAd.load();
-
-    // Load Interstitial Ad
-    _loadInterstitialAd();
-  }
-
-  void _loadInterstitialAd() {
-    InterstitialAd.load(
-      adUnitId: 'ca-app-pub-3940256099942544/1033173712', // Test ID
-      request: AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (InterstitialAd ad) {
-          _interstitialAd = ad;
-          _isInterstitialAdReady = true;
-          print('Interstitial Ad carregado');
-        },
-        onAdFailedToLoad: (LoadAdError error) {
-          print('InterstitialAd failed to load: $error');
-          _isInterstitialAdReady = false;
-        },
-      ),
-    );
-  }
-
-  void _showInterstitialAd(Function onAdClosed) {
-    if (_isInterstitialAdReady && _interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
-          ad.dispose();
-          setState(() {
-            _isInterstitialAdReady = false;
-          });
-          _loadInterstitialAd(); // Load a new ad for future use
-          onAdClosed();
-        },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
-          ad.dispose();
-          setState(() {
-            _isInterstitialAdReady = false;
-          });
-          _loadInterstitialAd(); // Load a new ad for future use
-          onAdClosed(); // Proceed even if ad fails to show
-        },
-      );
-      _interstitialAd!.show();
-    } else {
-      print('Interstitial Ad não está pronto');
-      onAdClosed(); // Proceed if ad is not ready
-    }
-  }
-
-  @override
-  void dispose() {
-    _bannerAd.dispose();
-    _interstitialAd?.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Loterias - Resultado Fácil'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.history),
-            onPressed: () {
-              Navigator.pushNamed(context, '/history');
-            },
-            tooltip: 'Ver Histórico',
-          ),
-        ],
+      appBar: const CustomAppBar(
+        title: 'Loterias - Resultado Fácil',
+        showBackButton: false,
       ),
       body: Column(
         children: [
+          // Botões de ação
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton.icon(
-              icon: Icon(Icons.history),
-              label: Text('Ver Histórico'),
-              onPressed: () {
-                Navigator.pushNamed(context, '/history');
-              },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.history),
+                  label: const Text('Ver Histórico'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(150, 50),
+                  ),
+                  onPressed: () {
+                    AdManager.showInterstitialAd(() {
+                      Navigator.pushNamed(context, '/history');
+                    });
+                  },
+                ),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.playlist_add),
+                  label: const Text('Múltiplos Jogos'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(150, 50),
+                  ),
+                  onPressed: () {
+                    AdManager.showInterstitialAd(() {
+                      Navigator.pushNamed(context, '/multiple_entry');
+                    });
+                  },
+                ),
+              ],
             ),
           ),
+          // Lista de loterias
           Expanded(
             child: ListView.builder(
               itemCount: lotteries.length,
               itemBuilder: (context, index) {
                 final lottery = lotteries[index];
                 return Card(
-                  margin: EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   child: ListTile(
-                    title: Text(lottery['name']!),
-                    trailing: Icon(Icons.arrow_forward_ios),
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.blue,
+                      child: Text(
+                        lottery['name']![0],
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    title: Text(
+                      lottery['name']!,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
-                      // Show Interstitial Ad before navigation
-                      _showInterstitialAd(() {
-                        Navigator.pushNamed(
-                          context,
-                          '/manual_entry',
-                          arguments: lottery,
-                        );
-                      });
+                      // Verifica se a loteria é Lotofácil para mostrar a opção de Múltiplos Jogos
+                      if (lottery['apiName'] == 'lotofacil') {
+                        AdManager.showInterstitialAd(() {
+                          Navigator.pushNamed(
+                            context,
+                            '/multiple_entry',
+                          );
+                        });
+                      } else {
+                        AdManager.showInterstitialAd(() {
+                          Navigator.pushNamed(
+                            context,
+                            '/manual_entry',
+                            arguments: lottery,
+                          );
+                        });
+                      }
                     },
                   ),
                 );
               },
             ),
           ),
-          if (_isBannerAdReady)
-            SizedBox(
-              width: _bannerAd.size.width.toDouble(),
-              height: _bannerAd.size.height.toDouble(),
-              child: AdWidget(ad: _bannerAd),
-            ),
+          const BannerAdWidget(),
         ],
       ),
     );
