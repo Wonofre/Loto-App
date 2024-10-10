@@ -47,18 +47,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     });
                   },
                 ),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.playlist_add),
-                  label: const Text('Múltiplos Jogos'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(150, 50),
-                  ),
-                  onPressed: () {
-                    AdManager.showInterstitialAd(() {
-                      Navigator.pushNamed(context, '/multiple_entry');
-                    });
-                  },
-                ),
               ],
             ),
           ),

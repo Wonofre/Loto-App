@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/lottery_game.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/banner_ad_widget.dart';
+import 'scan_ticket_screen.dart';
 
 class ManualEntryScreen extends StatefulWidget {
   const ManualEntryScreen({super.key});
@@ -176,10 +177,28 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     );
   }
 
+  // Adicionado para navegar até a tela de escaneamento e retornar os números
+  void _navigateToScanTicket() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ScanTicketScreen(returnGames: true),
+      ),
+    );
+
+    if (result != null && result is List<LotteryGame>) {
+      setState(() {
+        if (result.isNotEmpty) {
+          selectedNumbers = result.first.selectedNumbers;
+          selectedTeam = result.first.selectedTeam;
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Determinar o intervalo de números com base na loteria
-    int minNumber = 1;
     int maxNumber = 60; // Padrão, ajustar conforme a loteria
 
     switch (lottery['apiName']) {
@@ -235,6 +254,13 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                       lottery['name']!,
                       style: const TextStyle(
                           fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 16),
+                    // Botão para escanear bilhete
+                    ElevatedButton.icon(
+                      onPressed: _navigateToScanTicket,
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Adicionar Jogo por Foto'),
                     ),
                     const SizedBox(height: 16),
                     // Seleção de Números
@@ -310,14 +336,6 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        ElevatedButton(
-                          onPressed: _saveGame,
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(150, 50),
-                          ),
-                          child: Text(
-                              isEditMode ? 'Atualizar Jogo' : 'Salvar Jogo'),
-                        ),
                         ElevatedButton(
                           onPressed:
                               selectedNumbers.isNotEmpty ? _viewResult : null,

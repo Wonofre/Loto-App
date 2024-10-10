@@ -16,6 +16,12 @@ dependencies:
   intl: ^0.19.0  # Updated to the latest for internationalization support
   shared_preferences: ^2.3.0  # Includes latest APIs for improved performance
   google_mobile_ads: ^5.1.0  # Latest version with bug fixes and improvements
+  google_mlkit_text_recognition: ^0.14.0
+  image_picker: ^1.1.2
+  image: ^4.2.0
+  path_provider: 2.1.4
+  material_design_icons_flutter: 7.0.7296
+
 
 dev_dependencies:
   flutter_test:

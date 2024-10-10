@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/lottery_game.dart';
 import '../widgets/custom_app_bar.dart';
 import '../utils/ad_manager.dart';
-import 'result_multiple_screen.dart';
 import '../widgets/banner_ad_widget.dart';
+import 'scan_ticket_screen.dart';
 
 class MultipleEntryScreen extends StatefulWidget {
   const MultipleEntryScreen({super.key});
@@ -29,21 +29,59 @@ class _MultipleEntryScreenState extends State<MultipleEntryScreen> {
   }
 
   Future<void> _navigateToAddGame() async {
-    final result = await Navigator.pushNamed(context, '/manual_entry',
-        arguments: {
-          'addGame': true,
-          'lottery': lotteryMap()
-        }); // Passar a loteria atual
-
-    if (result != null && result is Map<String, dynamic>) {
-      _addGame(
-        LotteryGame(
-          lottery: Map<String, String>.from(result['lottery']),
-          selectedNumbers: List<int>.from(result['selectedNumbers']),
-          selectedTeam: result['selectedTeam'],
-        ),
-      );
-    }
+    final result = await showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Adicionar Jogo Manualmente'),
+              onTap: () async {
+                Navigator.pop(context); // Fecha o modal
+                final manualResult = await Navigator.pushNamed(
+                    context, '/manual_entry',
+                    arguments: {
+                      'addGame': true,
+                      'lottery': lotteryMap(),
+                    });
+                if (manualResult != null &&
+                    manualResult is Map<String, dynamic>) {
+                  _addGame(
+                    LotteryGame(
+                      lottery:
+                          Map<String, String>.from(manualResult['lottery']),
+                      selectedNumbers:
+                          List<int>.from(manualResult['selectedNumbers']),
+                      selectedTeam: manualResult['selectedTeam'],
+                    ),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Adicionar Jogos por Fotos'),
+              onTap: () async {
+                Navigator.pop(context); // Fecha o modal
+                final scanResult = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const ScanTicketScreen(returnGames: true),
+                  ),
+                );
+                if (scanResult != null && scanResult is List<LotteryGame>) {
+                  setState(() {
+                    games.addAll(scanResult);
+                  });
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Map<String, String> lotteryMap() {
@@ -61,9 +99,6 @@ class _MultipleEntryScreenState extends State<MultipleEntryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Garantir que apenas Lotofácil está sendo usada
-    final lottery = {'name': 'Lotofácil', 'apiName': 'lotofacil'};
-
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Conferir Múltiplos Jogos',

@@ -7,6 +7,7 @@ import 'screens/manual_entry_screen.dart';
 import 'screens/multiple_entry_screen.dart';
 import 'screens/result_screen.dart';
 import 'screens/result_multiple_screen.dart';
+import 'screens/scan_ticket_screen.dart';
 import 'utils/ad_manager.dart';
 
 void main() {
@@ -51,6 +52,7 @@ class LotteryApp extends StatelessWidget {
         '/multiple_entry': (context) => const MultipleEntryScreen(),
         '/result': (context) => const ResultScreen(),
         '/result_multiple': (context) => const ResultMultipleScreen(),
+        '/scan_ticket': (context) => const ScanTicketScreen(),
       },
     );
   }
