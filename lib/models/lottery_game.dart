@@ -1,8 +1,8 @@
 // lib/models/lottery_game.dart
 class LotteryGame {
   final Map<String, String> lottery;
-  List<int> selectedNumbers;
-  String? selectedTeam; // Para loterias que exigem seleção de time
+  final List<int> selectedNumbers;
+  final String? selectedTeam; // For lotteries that require team selection
 
   LotteryGame({
     required this.lottery,

@@ -1,13 +1,10 @@
-// lib/services/api_service.dart
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'dart:convert'; // Para codificação/decodificação JSON
+import 'package:firebase_database/firebase_database.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/lottery_result.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://lottolookup.com.br/api';
   static final ApiService _instance = ApiService._internal();
-  final Map<String, LotteryResult> _cache = {};
 
   factory ApiService() {
     return _instance;
@@ -15,52 +12,118 @@ class ApiService {
 
   ApiService._internal();
 
-  // Método para obter o último resultado da loteria com cache interno
+  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+
+  // Fetch the latest result from Firebase Realtime Database
   Future<LotteryResult?> fetchLatestResult(String lotteryName) async {
-    final url = Uri.parse('$baseUrl/$lotteryName/latest');
-
     try {
-      final response = await http.get(url);
+      LotteryResult? cachedResult = await _getCachedResult(lotteryName);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        LotteryResult result = LotteryResult.fromJson(data);
-        _cache[lotteryName] = result; // Armazenar no cache interno
-        await _cacheResultLocal(
-            lotteryName, data); // Cache local para persistência
-        return result;
-      } else {
-        print('Erro ao obter os dados: ${response.statusCode}');
-        return null;
+      if (cachedResult != null &&
+          await _isResultValid(lotteryName, cachedResult)) {
+        // Se o resultado armazenado é válido, retorna do cache
+        return cachedResult;
       }
+
+      // Se o cache for inválido, busca no Firebase
+      LotteryResult? firebaseResult =
+          await _getCachedResultFirebase(lotteryName);
+
+      if (firebaseResult != null) {
+        // Armazena no cache local após buscar do Firebase
+        await _saveToCache(lotteryName, firebaseResult);
+      }
+
+      return firebaseResult;
     } catch (e) {
       print('Erro: $e');
       return null;
     }
   }
 
-  // Método para cachear o resultado localmente
-  Future<void> _cacheResultLocal(
-      String lotteryName, Map<String, dynamic> data) async {
-    final prefs = await SharedPreferences.getInstance();
-    final resultJson = json.encode(data);
-    await prefs.setString('cached_$lotteryName', resultJson);
-  }
+  // Get cached result (latest) from Firebase Realtime Database
+  Future<LotteryResult?> _getCachedResultFirebase(String lotteryName) async {
+    final snapshot = await _dbRef.child('lotteries/$lotteryName').get();
 
-  // Método para obter o resultado cacheado localmente
-  Future<LotteryResult?> getCachedResult(String lotteryName) async {
-    if (_cache.containsKey(lotteryName)) {
-      return _cache[lotteryName];
-    }
-
-    final prefs = await SharedPreferences.getInstance();
-    final cachedResult = prefs.getString('cached_$lotteryName');
-    if (cachedResult != null) {
-      final data = json.decode(cachedResult);
-      LotteryResult result = LotteryResult.fromJson(data);
-      _cache[lotteryName] = result; // Armazenar no cache interno
-      return result;
+    if (snapshot.value != null) {
+      final data = Map<String, dynamic>.from(snapshot.value as Map);
+      return LotteryResult.fromJson(data);
     }
     return null;
+  }
+
+  // Fetch a specific result by contest number from Firebase Realtime Database
+  Future<LotteryResult?> fetchResultByContestNumber(
+      String lotteryName, int contestNumber) async {
+    try {
+      final snapshot = await _dbRef
+          .child('lotteries/$lotteryName/historical/$contestNumber')
+          .get();
+
+      if (snapshot.exists) {
+        final data = Map<String, dynamic>.from(snapshot.value as Map);
+        return LotteryResult.fromJson(data);
+      } else {
+        print('Concurso $contestNumber não encontrado para $lotteryName.');
+        return null;
+      }
+    } catch (e) {
+      print('Erro ao buscar o concurso $contestNumber para $lotteryName: $e');
+      return null;
+    }
+  }
+
+  // Função para obter dados armazenados no cache local
+  Future<LotteryResult?> _getCachedResult(String lotteryName) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? cachedData = prefs.getString('$lotteryName-result');
+
+    if (cachedData != null) {
+      final Map<String, dynamic> data = jsonDecode(cachedData);
+      final cachedResult = LotteryResult.fromJson(data);
+
+      // Verifica se o número do concurso ou data de apuração são válidos
+      if (await _isResultValid(lotteryName, cachedResult)) {
+        return cachedResult;
+      }
+    }
+    return null;
+  }
+
+  // Função para salvar dados no cache local
+  Future<void> _saveToCache(String lotteryName, LotteryResult result) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Converta o LotteryResult para JSON e adicione a hora atual como 'fetchTime'
+    final resultWithFetchTime = result.toJson();
+    resultWithFetchTime['fetchTime'] =
+        DateTime.now().toIso8601String(); // Adiciona a hora atual
+
+    String jsonData = jsonEncode(resultWithFetchTime);
+    await prefs.setString('$lotteryName-result', jsonData);
+  }
+
+  // Verifica se o resultado é válido (mesma data ou número de concurso)
+  Future<bool> _isResultValid(String lotteryName, LotteryResult result) async {
+    // Obter o último resultado do Firebase
+    LotteryResult? latestResult = await _getCachedResultFirebase(lotteryName);
+
+    if (latestResult != null) {
+      // Comparar os números de concurso
+      return result.numero == latestResult.numero;
+    }
+
+    // Se não conseguir obter o último resultado, considere o cache válido por 12 horas
+    final now = DateTime.now();
+
+    // Verifica se 'fetchTime' está presente no resultado e é uma string válida
+    final cacheTime = DateTime.tryParse(result.fetchTime.toIso8601String());
+
+    if (cacheTime != null) {
+      final difference = now.difference(cacheTime).inHours;
+      return difference < 12; // Cache válido por 12 horas
+    }
+
+    return false; // Se não houver 'fetchTime', o cache é considerado inválido
   }
 }

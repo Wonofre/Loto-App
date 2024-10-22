@@ -13,7 +13,7 @@ class AdManager {
   static void loadInterstitialAd() {
     InterstitialAd.load(
       adUnitId:
-          'ca-app-pub-3940256099942544/1033173712', // Substitua pelo seu Ad Unit ID
+          'ca-app-pub-3940256099942544/1033173712', // ID de anúncio de teste
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (InterstitialAd ad) {
@@ -29,26 +29,28 @@ class AdManager {
     );
   }
 
-  static void showInterstitialAd(Function onAdClosed) {
+  static Future<void> showInterstitialAd(
+      Future<void> Function() onAdClosed) async {
     if (_isInterstitialAdReady && _interstitialAd != null) {
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+        onAdDismissedFullScreenContent: (InterstitialAd ad) async {
           ad.dispose();
           _isInterstitialAdReady = false;
           loadInterstitialAd(); // Carrega um novo anúncio para uso futuro
-          onAdClosed();
+          await onAdClosed();
         },
-        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+        onAdFailedToShowFullScreenContent:
+            (InterstitialAd ad, AdError error) async {
           ad.dispose();
           _isInterstitialAdReady = false;
           loadInterstitialAd(); // Carrega um novo anúncio para uso futuro
-          onAdClosed(); // Prossegue mesmo que o anúncio falhe
+          await onAdClosed(); // Prossegue mesmo se o anúncio falhar
         },
       );
       _interstitialAd!.show();
     } else {
       print('Interstitial Ad não está pronto');
-      onAdClosed(); // Prossegue se o anúncio não estiver pronto
+      await onAdClosed(); // Prossegue se o anúncio não estiver pronto
     }
   }
 }

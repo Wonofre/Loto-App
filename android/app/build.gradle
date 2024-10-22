@@ -1,4 +1,4 @@
-plugins {
+plugins { 
     id "com.android.application"
     id "kotlin-android"
     id "dev.flutter.flutter-gradle-plugin"
@@ -7,8 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.lotoapp"
-    compileSdk = 34 // Ensure this matches your target
-    
+    compileSdk = 34
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -28,11 +28,15 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.debug // **Important:** Update for production
+            signingConfig = signingConfigs.debug // Update for production signing
         }
     }
 }
 
 dependencies {
     implementation 'com.google.mlkit:text-recognition:16.0.0'
+    // Other dependencies go here
 }
+
+// Apply the Google services plugin after the dependencies
+apply plugin: 'com.google.gms.google-services'

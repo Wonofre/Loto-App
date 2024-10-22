@@ -5,17 +5,28 @@ import 'home_button.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final bool showBackButton;
+  final List<Widget>? actions; // Adicionado para permitir ações extras
 
   const CustomAppBar({
     super.key,
     required this.title,
     this.showBackButton = true,
+    this.actions, // Adicionado
   });
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(title),
+      title: FittedBox(
+        // Usando FittedBox para ajustar dinamicamente o título
+        fit: BoxFit.scaleDown,
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 16), // Ajuste de tamanho da fonte
+          overflow:
+              TextOverflow.ellipsis, // Truncar com reticências se necessário
+        ),
+      ),
       leading: showBackButton
           ? IconButton(
               icon: const Icon(Icons.arrow_back),
@@ -24,8 +35,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               },
             )
           : null,
-      actions: const [
-        HomeButton(),
+      actions: [
+        ...?actions, // Inclui as ações personalizadas se fornecidas
+        const HomeButton(), // Mantém o botão home como padrão
       ],
     );
   }

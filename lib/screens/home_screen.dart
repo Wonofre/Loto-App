@@ -29,25 +29,20 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          // Botões de ação
+          // Botão de ação
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.history),
-                  label: const Text('Ver Histórico'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(150, 50),
-                  ),
-                  onPressed: () {
-                    AdManager.showInterstitialAd(() {
-                      Navigator.pushNamed(context, '/history');
-                    });
-                  },
-                ),
-              ],
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.history),
+              label: const Text('Ver Histórico'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+              ),
+              onPressed: () async {
+                await AdManager.showInterstitialAd(() async {
+                  Navigator.pushNamed(context, '/history');
+                });
+              },
             ),
           ),
           // Lista de loterias
@@ -77,24 +72,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios),
-                    onTap: () {
-                      // Verifica se a loteria é Lotofácil para mostrar a opção de Múltiplos Jogos
-                      if (lottery['apiName'] == 'lotofacil') {
-                        AdManager.showInterstitialAd(() {
-                          Navigator.pushNamed(
-                            context,
-                            '/multiple_entry',
-                          );
-                        });
-                      } else {
-                        AdManager.showInterstitialAd(() {
-                          Navigator.pushNamed(
-                            context,
-                            '/manual_entry',
-                            arguments: lottery,
-                          );
-                        });
-                      }
+                    onTap: () async {
+                      await AdManager.showInterstitialAd(() async {
+                        Navigator.pushNamed(
+                          context,
+                          '/multiple_entry',
+                          arguments: lottery,
+                        );
+                      });
                     },
                   ),
                 );

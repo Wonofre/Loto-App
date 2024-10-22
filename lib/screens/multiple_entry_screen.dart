@@ -5,6 +5,7 @@ import '../widgets/custom_app_bar.dart';
 import '../utils/ad_manager.dart';
 import '../widgets/banner_ad_widget.dart';
 import 'scan_ticket_screen.dart';
+import 'manual_entry_screen.dart';
 
 class MultipleEntryScreen extends StatefulWidget {
   const MultipleEntryScreen({super.key});
@@ -14,7 +15,22 @@ class MultipleEntryScreen extends StatefulWidget {
 }
 
 class _MultipleEntryScreenState extends State<MultipleEntryScreen> {
+  Map<String, String>? lottery;
+
   List<LotteryGame> games = [];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, String>?;
+    if (args != null && args.containsKey('apiName')) {
+      lottery = args;
+    } else {
+      // If no lottery argument, default to Lotofácil
+      lottery = {'name': 'Lotofácil', 'apiName': 'lotofacil'};
+    }
+  }
 
   void _addGame(LotteryGame game) {
     setState(() {
@@ -38,55 +54,61 @@ class _MultipleEntryScreenState extends State<MultipleEntryScreen> {
               leading: const Icon(Icons.edit),
               title: const Text('Adicionar Jogo Manualmente'),
               onTap: () async {
-                Navigator.pop(context); // Fecha o modal
-                final manualResult = await Navigator.pushNamed(
-                    context, '/manual_entry',
-                    arguments: {
-                      'addGame': true,
-                      'lottery': lotteryMap(),
-                    });
-                if (manualResult != null &&
-                    manualResult is Map<String, dynamic>) {
-                  _addGame(
-                    LotteryGame(
-                      lottery:
-                          Map<String, String>.from(manualResult['lottery']),
-                      selectedNumbers:
-                          List<int>.from(manualResult['selectedNumbers']),
-                      selectedTeam: manualResult['selectedTeam'],
+                await AdManager.showInterstitialAd(() async {
+                  Navigator.pop(context); // Close the modal
+                  final manualResult = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          const ManualEntryScreen(showSaveButton: true),
+                      settings: RouteSettings(arguments: {
+                        'addGame': true,
+                        'lottery': lottery,
+                      }),
                     ),
                   );
-                }
+                  if (manualResult != null &&
+                      manualResult is Map<String, dynamic>) {
+                    setState(() {
+                      _addGame(
+                        LotteryGame(
+                          lottery:
+                              Map<String, String>.from(manualResult['lottery']),
+                          selectedNumbers:
+                              List<int>.from(manualResult['selectedNumbers']),
+                          selectedTeam: manualResult['selectedTeam'],
+                        ),
+                      );
+                    });
+                  }
+                });
               },
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt),
               title: const Text('Adicionar Jogos por Fotos'),
               onTap: () async {
-                Navigator.pop(context); // Fecha o modal
-                final scanResult = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        const ScanTicketScreen(returnGames: true),
-                  ),
-                );
-                if (scanResult != null && scanResult is List<LotteryGame>) {
-                  setState(() {
-                    games.addAll(scanResult);
-                  });
-                }
+                await AdManager.showInterstitialAd(() async {
+                  Navigator.pop(context); // Close the modal
+                  final scanResult = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ScanTicketScreen(
+                          returnGames: true, lottery: lottery!),
+                    ),
+                  );
+                  if (scanResult != null && scanResult is List<LotteryGame>) {
+                    setState(() {
+                      games.addAll(scanResult);
+                    });
+                  }
+                });
               },
             ),
           ],
         );
       },
     );
-  }
-
-  Map<String, String> lotteryMap() {
-    // Define que a loteria é Lotofácil
-    return {'name': 'Lotofácil', 'apiName': 'lotofacil'};
   }
 
   void _checkResults() {
@@ -100,8 +122,8 @@ class _MultipleEntryScreenState extends State<MultipleEntryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(
-        title: 'Conferir Múltiplos Jogos',
+      appBar: CustomAppBar(
+        title: 'Conferir Múltiplos Jogos - ${lottery!['name']}',
       ),
       body: Column(
         children: [
@@ -139,16 +161,18 @@ class _MultipleEntryScreenState extends State<MultipleEntryScreen> {
                             onPressed: () => _removeGame(index),
                           ),
                           onTap: () async {
-                            // Navegar para editar o jogo
-                            final updatedGame = await Navigator.pushNamed(
+                            // Navigate to edit the game
+                            final updatedGame = await Navigator.push(
                               context,
-                              '/manual_entry',
-                              arguments: {
-                                'editGame': true,
-                                'game': game,
-                                'lottery':
-                                    game.lottery, // Passar a loteria atual
-                              },
+                              MaterialPageRoute(
+                                builder: (context) => const ManualEntryScreen(
+                                    showSaveButton: true),
+                                settings: RouteSettings(arguments: {
+                                  'editGame': true,
+                                  'game': game,
+                                  'lottery': game.lottery,
+                                }),
+                              ),
                             );
 
                             if (updatedGame != null &&

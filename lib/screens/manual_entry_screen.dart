@@ -4,9 +4,14 @@ import '../models/lottery_game.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/banner_ad_widget.dart';
 import 'scan_ticket_screen.dart';
+import 'package:intl/intl.dart'; // Importação para formatação monetária
+import '../utils/ad_manager.dart';
 
 class ManualEntryScreen extends StatefulWidget {
-  const ManualEntryScreen({super.key});
+  final bool showSaveButton;
+
+  const ManualEntryScreen({Key? key, required this.showSaveButton})
+      : super(key: key);
 
   @override
   _ManualEntryScreenState createState() => _ManualEntryScreenState();
@@ -15,25 +20,17 @@ class ManualEntryScreen extends StatefulWidget {
 class _ManualEntryScreenState extends State<ManualEntryScreen> {
   late Map<String, String> lottery;
   List<int> selectedNumbers = [];
-  String? selectedTeam; // Para loterias que exigem seleção de time
+  String? selectedTeam;
   bool isEditMode = false;
   LotteryGame? gameToEdit;
+  int? contestNumber; // Adicionado para armazenar o número do concurso
 
   final _formKey = GlobalKey<FormState>();
 
-  // Predefined list of teams for 'timemania', can be extended
   final List<String> teams = [
-    'Flamengo',
-    'Palmeiras',
-    'São Paulo',
-    'Corinthians',
-    'Vasco',
-    'Grêmio',
-    'Internacional',
-    'Botafogo',
-    'Santos',
-    'Atlético Mineiro',
-    // Adicione mais times conforme necessário
+    'Flamengo', 'Palmeiras', 'São Paulo', 'Corinthians', 'Vasco',
+    'Grêmio', 'Internacional', 'Botafogo', 'Santos', 'Atlético Mineiro',
+    // Add more teams as needed
   ];
 
   @override
@@ -51,12 +48,13 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       } else if (args.containsKey('addGame')) {
         isEditMode = false;
         lottery = Map<String, String>.from(args['lottery']);
+      } else if (args.containsKey('lottery')) {
+        lottery = Map<String, String>.from(args['lottery']);
+        isEditMode = false;
       } else {
-        // Assume que os argumentos são o mapa da loteria
-        lottery = Map<String, String>.from(args);
+        throw Exception('Argumentos inválidos para ManualEntryScreen');
       }
     } else {
-      // Caso os argumentos não sejam passados corretamente
       throw Exception('Argumentos inválidos para ManualEntryScreen');
     }
   }
@@ -66,50 +64,49 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       if (selectedNumbers.contains(number)) {
         selectedNumbers.remove(number);
       } else {
-        // Defina o número máximo de seleções conforme a loteria
-        int maxNumbers = _getMaxNumbers();
-        if (selectedNumbers.length < maxNumbers) {
+        int maxSelections = _getMaxSelectableNumbers(lottery['apiName']!);
+        if (selectedNumbers.length < maxSelections) {
           selectedNumbers.add(number);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
                 content: Text(
-                    'Você já selecionou o máximo de $maxNumbers números.')),
+                    'Você já selecionou o máximo de $maxSelections números.')),
           );
         }
       }
     });
   }
 
-  int _getMaxNumbers() {
-    switch (lottery['apiName']) {
+  int _getMaxNumber(String apiName) {
+    switch (apiName) {
       case 'lotofacil':
-        return 18;
+        return 25;
       case 'megasena':
-        return 15;
+        return 60;
       case 'quina':
-        return 15;
+        return 80;
       case 'lotomania':
-        return 50;
+        return 100;
       case 'timemania':
-        return 10;
+        return 80;
       case 'duplasena':
-        return 15;
+        return 50;
       case 'federal':
-        return 15;
+        return 60;
       case 'loteca':
-        return 20;
+        return 90;
       case 'diadesorte':
-        return 7;
+        return 31;
       case 'supersete':
-        return 7;
+        return 49;
       default:
-        return 15;
+        return 60;
     }
   }
 
-  int _getMinNumbers() {
-    switch (lottery['apiName']) {
+  int _getMinSelectableNumbers(String apiName) {
+    switch (apiName) {
       case 'lotofacil':
         return 15;
       case 'megasena':
@@ -117,15 +114,11 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       case 'quina':
         return 5;
       case 'lotomania':
-        return 50; // Lotomania tem um número fixo de seleções
+        return 50;
       case 'timemania':
-        return 10; // Exemplo
+        return 10;
       case 'duplasena':
         return 6;
-      case 'federal':
-        return 6;
-      case 'loteca':
-        return 20;
       case 'diadesorte':
         return 7;
       case 'supersete':
@@ -135,54 +128,94 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
     }
   }
 
-  void _saveGame() {
-    if (_formKey.currentState!.validate()) {
-      int minNumbers = _getMinNumbers();
-
-      if (selectedNumbers.length < minNumbers) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content:
-                  Text('Por favor, selecione pelo menos $minNumbers números.')),
-        );
-        return;
-      }
-
-      if (lottery['apiName'] == 'timemania' && selectedTeam == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, selecione um time.')),
-        );
-        return;
-      }
-
-      final result = {
-        'lottery': lottery,
-        'selectedNumbers': selectedNumbers,
-        'selectedTeam': selectedTeam,
-      };
-
-      Navigator.pop(context, result);
+  int _getMaxSelectableNumbers(String apiName) {
+    switch (apiName) {
+      case 'lotofacil':
+        return 18; // Lotofácil allows selection between 15 and 18 numbers
+      case 'megasena':
+        return 15; // Mega-Sena allows selection between 6 and 15 numbers
+      case 'quina':
+        return 15; // Quina allows selection between 5 and 15 numbers
+      case 'lotomania':
+        return 50; // Lotomania requires exactly 50 numbers
+      case 'timemania':
+        return 10; // Timemania requires exactly 10 numbers
+      case 'duplasena':
+        return 15; // Dupla Sena allows selection between 6 and 15 numbers
+      case 'diadesorte':
+        return 15; // Dia de Sorte allows selection between 7 and 15 numbers
+      case 'supersete':
+        return 7; // Super Sete requires exactly 7 numbers
+      default:
+        return 6;
     }
   }
 
-  void _viewResult() {
-    Navigator.pushNamed(
-      context,
-      '/result',
-      arguments: {
-        'selectedNumbers': selectedNumbers,
-        'lottery': lottery,
-        'selectedTeam': selectedTeam,
-      },
-    );
+  void _saveGame() {
+    int minNumbers = _getMinSelectableNumbers(lottery['apiName']!);
+    int maxNumbers = _getMaxSelectableNumbers(lottery['apiName']!);
+
+    if (selectedNumbers.length < minNumbers ||
+        selectedNumbers.length > maxNumbers) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Por favor, selecione entre $minNumbers e $maxNumbers números.')),
+      );
+      return;
+    }
+
+    if (lottery['apiName'] == 'timemania' && selectedTeam == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, selecione um time.')),
+      );
+      return;
+    }
+
+    final result = {
+      'lottery': lottery,
+      'selectedNumbers': selectedNumbers,
+      'selectedTeam': selectedTeam,
+    };
+
+    Navigator.pop(context, result);
   }
 
-  // Adicionado para navegar até a tela de escaneamento e retornar os números
+  void _viewResult() {
+    int minNumbers = _getMinSelectableNumbers(lottery['apiName']!);
+    int maxNumbers = _getMaxSelectableNumbers(lottery['apiName']!);
+
+    if (selectedNumbers.length < minNumbers ||
+        selectedNumbers.length > maxNumbers) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'Por favor, selecione entre $minNumbers e $maxNumbers números.')),
+      );
+      return;
+    }
+
+    AdManager.showInterstitialAd(() async {
+      Navigator.pushNamed(
+        context,
+        '/result',
+        arguments: {
+          'selectedNumbers': selectedNumbers,
+          'lottery': lottery,
+          'selectedTeam': selectedTeam,
+        },
+      );
+    });
+  }
+
   void _navigateToScanTicket() async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const ScanTicketScreen(returnGames: true),
+        builder: (context) => const ScanTicketScreen(
+          returnGames: true,
+          lottery: {},
+        ),
       ),
     );
 
@@ -193,48 +226,67 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
           selectedTeam = result.first.selectedTeam;
         }
       });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nenhum jogo foi escaneado.')),
+      );
     }
+  }
+
+  void _showContestNumberDialog() {
+    final _contestNumberController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Digite o número do concurso'),
+          content: TextField(
+            controller: _contestNumberController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              hintText: 'Número do Concurso',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                final contestNumberInput =
+                    int.tryParse(_contestNumberController.text);
+                if (contestNumberInput != null) {
+                  Navigator.pop(context);
+                  setState(() {
+                    contestNumber = contestNumberInput;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'Número do concurso $contestNumberInput selecionado.')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Por favor, insira um número válido.')),
+                  );
+                }
+              },
+              child: const Text('Buscar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Determinar o intervalo de números com base na loteria
-    int maxNumber = 60; // Padrão, ajustar conforme a loteria
-
-    switch (lottery['apiName']) {
-      case 'lotofacil':
-        maxNumber = 25;
-        break;
-      case 'megasena':
-        maxNumber = 60;
-        break;
-      case 'quina':
-        maxNumber = 80;
-        break;
-      case 'lotomania':
-        maxNumber = 100;
-        break;
-      case 'timemania':
-        maxNumber = 80;
-        break;
-      case 'duplasena':
-        maxNumber = 50;
-        break;
-      case 'federal':
-        maxNumber = 60;
-        break;
-      case 'loteca':
-        maxNumber = 90;
-        break;
-      case 'diadesorte':
-        maxNumber = 31;
-        break;
-      case 'supersete':
-        maxNumber = 7;
-        break;
-      default:
-        maxNumber = 60;
-    }
+    int maxNumber = _getMaxNumber(lottery['apiName']!);
 
     return Scaffold(
       appBar: const CustomAppBar(
@@ -243,7 +295,7 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Formulário para seleção de números e time
+            // Form for selecting numbers and team
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
@@ -256,14 +308,12 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                           fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 16),
-                    // Botão para escanear bilhete
-                    ElevatedButton.icon(
-                      onPressed: _navigateToScanTicket,
-                      icon: const Icon(Icons.camera_alt),
-                      label: const Text('Adicionar Jogo por Foto'),
+                    Text(
+                      'Números selecionados: ${selectedNumbers.length}',
+                      style: const TextStyle(fontSize: 16),
                     ),
                     const SizedBox(height: 16),
-                    // Seleção de Números
+                    const SizedBox(height: 16),
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -307,7 +357,6 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    // Seleção de Time para 'timemania'
                     if (lottery['apiName'] == 'timemania') ...[
                       DropdownButtonFormField<String>(
                         value: selectedTeam,
@@ -332,20 +381,29 @@ class _ManualEntryScreenState extends State<ManualEntryScreen> {
                       ),
                       const SizedBox(height: 16),
                     ],
-                    // Botões de Salvar e Ver Resultado
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        ElevatedButton(
-                          onPressed:
-                              selectedNumbers.isNotEmpty ? _viewResult : null,
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(150, 50),
+                        if (widget.showSaveButton)
+                          ElevatedButton(
+                            onPressed: _saveGame,
+                            style: ElevatedButton.styleFrom(
+                                minimumSize: const Size(150, 50)),
+                            child: Text(
+                                isEditMode ? 'Atualizar Jogo' : 'Salvar Jogo'),
                           ),
+                        ElevatedButton(
+                          onPressed: selectedNumbers.length >=
+                                  _getMinSelectableNumbers(lottery['apiName']!)
+                              ? _viewResult
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                              minimumSize: const Size(150, 50)),
                           child: const Text('Ver Resultado'),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
