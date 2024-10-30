@@ -184,191 +184,225 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: isLoading
-          ? const CustomAppBar(
-              title: 'Resultado',
-              showBackButton: false,
-            )
-          : CustomAppBar(
-              title:
-                  'Resultado do Concurso ${lotteryResult?.numero ?? contestNumber ?? ''} - ${lottery!['name']}',
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: _showContestNumberDialog,
-                ),
-              ],
-            ),
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : lotteryResult == null
-              ? Center(
-                  child: Text(
-                    contestNumber != null
-                        ? 'Não foi possível encontrar o concurso $contestNumber para ${lottery!['name']}.'
-                        : 'Erro ao obter os resultados. Tente novamente.',
-                    style: const TextStyle(fontSize: 18, color: Colors.red),
-                    textAlign: TextAlign.center,
+        appBar: isLoading
+            ? const CustomAppBar(
+                title: 'Resultado',
+                showBackButton: false,
+              )
+            : CustomAppBar(
+                title:
+                    'Resultado do Concurso ${lotteryResult?.numero ?? contestNumber ?? ''} - ${lottery?['name'] ?? 'Loteria'}',
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.search),
+                    tooltip: 'Buscar Concurso',
+                    onPressed: _showContestNumberDialog,
                   ),
-                )
-              : SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // Detalhes do Concurso
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              'Data: ${lotteryResult!.dataApuracao}',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Seus Números:',
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            Wrap(
-                              children: selectedNumbers.map((number) {
-                                bool isMatched =
-                                    matchedNumbers.contains(number);
-                                return Container(
-                                  margin: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isMatched ? Colors.green : Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  width: 40,
-                                  height: 40,
-                                  child: Center(
-                                    child: Text(
-                                      number.toString(),
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                            const SizedBox(height: 20),
-                            const Text(
-                              'Números Sorteados:',
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            Wrap(
-                              children:
-                                  lotteryResult!.listaDezenas.map((number) {
-                                return Container(
-                                  margin: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.blue,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  width: 40,
-                                  height: 40,
-                                  child: Center(
-                                    child: Text(
-                                      number.toString(),
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                            const SizedBox(height: 20),
-                            Text(
-                              'Você acertou ${matchedNumbers.length} números!',
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 20),
-                            // Rateio de Prêmios
-                            if (lotteryResult!.rateioPremios.isNotEmpty) ...[
+                ],
+              ),
+        body: isLoading
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
+            : lotteryResult == null
+                ? Center(
+                    child: Text(
+                      contestNumber != null
+                          ? 'Não foi possível encontrar o concurso $contestNumber para ${lottery?['name'] ?? 'a loteria'}.'
+                          : 'Erro ao obter os resultados. Tente novamente.',
+                      style: const TextStyle(fontSize: 18, color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                : SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        // Detalhes do Concurso
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Data do Concurso
+                              Text(
+                                'Data: ${lotteryResult!.dataApuracao}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Seus Números
                               const Text(
-                                'Rateio de Prêmios:',
+                                'Seus Números:',
                                 style: TextStyle(
                                     fontSize: 18, fontWeight: FontWeight.bold),
                               ),
-                              ...lotteryResult!.rateioPremios.entries
-                                  .map((entry) {
-                                return Text(
-                                  '${entry.key}: ${formatCurrency.format(entry.value)}',
-                                  style: const TextStyle(fontSize: 16),
-                                );
-                              }).toList(),
-                              const SizedBox(height: 20),
-                            ],
-                            Text(
-                              'Próximo concurso estimado em: ${formatCurrency.format(lotteryResult!.valorAcumuladoProximoConcurso)}',
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            const SizedBox(height: 20),
-                            // Botões
-                            ElevatedButton(
-                              onPressed: _saveToHistory,
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(50),
-                              ),
-                              child: const Text(
-                                'Salvar no Histórico',
-                                style: TextStyle(fontSize: 18),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            // Wrap Navigator.push with AdManager.showInterstitialAd
-                            ElevatedButton(
-                              onPressed: () {
-                                AdManager.showInterstitialAd(() async {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const ManualEntryScreen(
-                                              showSaveButton: false),
-                                      settings: RouteSettings(arguments: {
-                                        'lottery': lottery,
-                                      }),
+                              Wrap(
+                                children: selectedNumbers.map((number) {
+                                  bool isMatched =
+                                      matchedNumbers.contains(number);
+                                  return Container(
+                                    margin: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isMatched ? Colors.green : Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    width: 40,
+                                    height: 40,
+                                    child: Center(
+                                      child: Text(
+                                        number.toString(),
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
                                     ),
                                   );
-                                });
-                              },
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(50),
-                                backgroundColor: Colors.orange,
+                                }).toList(),
                               ),
-                              child: const Text(
-                                'Continuar Conferindo',
-                                style: TextStyle(fontSize: 18),
+                              const SizedBox(height: 20),
+
+                              // Números Sorteados
+                              const Text(
+                                'Números Sorteados:',
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/history');
-                              },
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size.fromHeight(50),
-                                backgroundColor: Colors.purple,
+                              Wrap(
+                                children:
+                                    lotteryResult!.listaDezenas.map((number) {
+                                  return Container(
+                                    margin: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.blue,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    width: 40,
+                                    height: 40,
+                                    child: Center(
+                                      child: Text(
+                                        number.toString(),
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
                               ),
-                              child: const Text(
-                                'Ver Histórico',
-                                style: TextStyle(fontSize: 18),
+                              const SizedBox(height: 20),
+
+                              // Número de Acertos
+                              Text(
+                                'Você acertou ${matchedNumbers.length} números!',
+                                style: const TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 20),
+
+                              // Rateio de Prêmios
+                              if (lotteryResult!.rateioPremios.isNotEmpty) ...[
+                                const Text(
+                                  'Rateio de Prêmios:',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                ...lotteryResult!.rateioPremios.entries
+                                    .map((entry) {
+                                  return Text(
+                                    '${entry.key}: ${formatCurrency.format(entry.value)}',
+                                    style: const TextStyle(fontSize: 16),
+                                  );
+                                }).toList(),
+                                const SizedBox(height: 20),
+                              ],
+
+                              // Próximo Concurso Estimado
+                              Text(
+                                'Próximo concurso estimado em: ${formatCurrency.format(lotteryResult!.valorAcumuladoProximoConcurso)}',
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Botões de Ação
+                              ElevatedButton(
+                                onPressed: _saveToHistory,
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(50),
+                                  backgroundColor: Colors.blue, // Cor do botão
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Salvar no Histórico',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+
+                              ElevatedButton(
+                                onPressed: () {
+                                  AdManager.showInterstitialAd(() async {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ManualEntryScreen(
+                                                showSaveButton: false),
+                                        settings: RouteSettings(arguments: {
+                                          'lottery': lottery,
+                                        }),
+                                      ),
+                                    );
+                                  });
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(50),
+                                  backgroundColor:
+                                      Colors.orange, // Cor do botão
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Continuar Conferindo',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/history');
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size.fromHeight(50),
+                                  backgroundColor:
+                                      Colors.purple, // Cor do botão
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Ver Histórico',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const BannerAdWidget(),
-                    ],
-                  ),
-                ),
-    );
+                        const BannerAdWidget(),
+                      ],
+                    ),
+                  ));
   }
 }

@@ -4,7 +4,6 @@ import '../models/lottery_game.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/banner_ad_widget.dart';
 import 'scan_ticket_screen.dart';
-import 'package:intl/intl.dart'; // Importação para formatação monetária
 import '../utils/ad_manager.dart';
 
 class ManualEntryScreen extends StatefulWidget {

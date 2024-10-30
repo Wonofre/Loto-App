@@ -5,7 +5,6 @@ import '../models/lottery_result.dart';
 import '../services/api_service.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/banner_ad_widget.dart';
-import 'history_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart'; // Importação para formatação monetária
@@ -329,49 +328,64 @@ class _ResultMultipleScreenState extends State<ResultMultipleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Resultados Múltiplos',
+      appBar: AppBar(
+        title: Text(
+          'Resultados Múltiplos',
+          style: TextStyle(fontSize: 20), // Ajuste conforme necessário
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed:
-                _showContestNumberDialog, // Botão para inserir número de concurso
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.search),
+                  tooltip: 'Buscar Concurso',
+                  onPressed: _showContestNumberDialog,
+                ),
+              ],
+            ),
           ),
         ],
+        elevation: 4, // Sombra para dar profundidade
+        backgroundColor: Colors.blue, // Cor de fundo personalizada
       ),
       body: isLoading
           ? const Center(
               child: CircularProgressIndicator(),
             )
           : SingleChildScrollView(
-              child: Column(
-                children: [
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: games.length,
-                    itemBuilder: (context, index) {
-                      final game = games[index];
-                      final result = results[game.lottery['apiName']!];
-                      return _buildGameCard(game, result);
-                    },
-                  ),
-                  // Botão para salvar todos os resultados no histórico
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: ElevatedButton(
-                      onPressed: _saveAllToHistory,
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(50),
-                      ),
-                      child: const Text(
-                        'Salvar Todos os Resultados no Histórico',
-                        style: TextStyle(fontSize: 18),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: games.length,
+                      itemBuilder: (context, index) {
+                        final game = games[index];
+                        final result = results[game.lottery['apiName']!];
+                        return _buildGameCard(game, result);
+                      },
+                    ),
+                    // Botão para salvar todos os resultados no histórico
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: ElevatedButton(
+                        onPressed: _saveAllToHistory,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(50),
+                        ),
+                        child: const Text(
+                          'Salvar Todos os Resultados no Histórico',
+                          style: TextStyle(fontSize: 18),
+                        ),
                       ),
                     ),
-                  ),
-                  const BannerAdWidget(),
-                ],
+                    const BannerAdWidget(),
+                  ],
+                ),
               ),
             ),
     );

@@ -2,7 +2,7 @@ name: LoteriasApp
 description: "Aplicativo para conferir resultados de loterias."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ">=3.0.0 <4.0.0"  # Updated for Dart 3 and Flutter 3 compatibility
@@ -30,3 +30,9 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^5.0.0  # Updated to the latest linting recommendations
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets\images\Bilhete-Instruções.jpg
+    - assets\images\Bilhete-Instrucoes-Detalhe.jpg

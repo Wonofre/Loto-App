@@ -287,6 +287,61 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
+
+                  // Menu suspenso de instruções
+                  ExpansionTile(
+                    initiallyExpanded: _images
+                        .isEmpty, // Expande por padrão se não houver imagens
+                    title: const Text(
+                      'Instruções',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              '- Garanta que o bilhete esteja bem iluminado e centralizado.',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            const Text(
+                              '- Tente enquadrar apenas a área dos jogos como destacado na imagem abaixo.',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(height: 20),
+
+                            // Adicionando a imagem de exemplo com o quadrado vermelho e flecha ao lado
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/Bilhete-Instruções.jpg', // Coloque o caminho correto da imagem no seu projeto
+                                    height: 200,
+                                  ),
+                                  const SizedBox(width: 20),
+                                  Image.asset(
+                                    'assets/images/Bilhete-Instrucoes-Detalhe.jpg', // Caminho correto para a imagem do detalhe
+                                    height: 120, // Tamanho da imagem do detalhe
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Exibição das imagens selecionadas
                   _images.isNotEmpty
                       ? SizedBox(
                           height: 200,
@@ -316,6 +371,7 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
                           ),
                         )
                       : const Icon(Icons.photo, size: 100, color: Colors.grey),
+
                   const SizedBox(height: 20),
                   ElevatedButton.icon(
                     onPressed: _showImageSourceSelection,
@@ -371,7 +427,7 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
                             );
                           },
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 10),
                         ElevatedButton(
                           onPressed: _navigateToResultMultiple,
                           child: const Text('Conferir Jogos Acumulados'),
