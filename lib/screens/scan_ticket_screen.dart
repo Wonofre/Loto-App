@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import '../models/lottery_game.dart';
 import '../widgets/custom_app_bar.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class ScanTicketScreen extends StatefulWidget {
   final bool returnGames;
@@ -30,17 +31,53 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
     final pickedFile = await _picker.pickImage(source: source);
 
     if (pickedFile != null) {
-      setState(() {
-        _isProcessing = true;
-      });
-
       File image = File(pickedFile.path);
-      await _processImage(image);
+
+      // Adicione o passo de corte aqui
+      File? croppedImage = await _cropImage(image);
+
+      if (croppedImage != null) {
+        setState(() {
+          _isProcessing = true;
+        });
+        await _processImage(croppedImage);
+      } else {
+        setState(() {
+          _isProcessing = false;
+        });
+        if (_debugMode) print("Imagem não foi cortada.");
+      }
     } else {
       setState(() {
         _isProcessing = false;
       });
       if (_debugMode) print("Nenhuma imagem selecionada.");
+    }
+  }
+
+  Future<File?> _cropImage(File imageFile) async {
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: imageFile.path,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Cortar Imagem',
+          toolbarColor: Colors.blue,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false,
+          // Removemos as opções de proporção de aspecto
+        ),
+        IOSUiSettings(
+          title: 'Cortar Imagem',
+          // Removemos as opções de proporção de aspecto
+        ),
+      ],
+    );
+
+    if (croppedFile != null) {
+      return File(croppedFile.path);
+    } else {
+      return null;
     }
   }
 
@@ -313,6 +350,10 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
                               '- Tente enquadrar apenas a área dos jogos como destacado na imagem abaixo.',
                               style: TextStyle(fontSize: 16),
                             ),
+                            const Text(
+                              '- Após selecionar ou tirar a foto, ajuste a área de corte para incluir somente os números dos jogos.',
+                              style: TextStyle(fontSize: 16),
+                            ),
                             const SizedBox(height: 20),
 
                             // Adicionando a imagem de exemplo com o quadrado vermelho e flecha ao lado
@@ -322,13 +363,13 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Image.asset(
-                                    'assets/images/Bilhete-Instruções.jpg', // Coloque o caminho correto da imagem no seu projeto
+                                    'assets/images/Bilhete-Instruções.jpg',
                                     height: 200,
                                   ),
                                   const SizedBox(width: 20),
                                   Image.asset(
-                                    'assets/images/Bilhete-Instrucoes-Detalhe.jpg', // Caminho correto para a imagem do detalhe
-                                    height: 120, // Tamanho da imagem do detalhe
+                                    'assets/images/Bilhete-Instrucoes-Detalhe.jpg',
+                                    height: 120,
                                   ),
                                 ],
                               ),
@@ -361,6 +402,10 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
                                       onPressed: () {
                                         setState(() {
                                           _images.removeAt(index);
+                                          // Remover jogos associados à imagem
+                                          // Aqui assumimos que cada imagem corresponde a jogos adicionados na mesma ordem
+                                          // Você pode precisar ajustar isso dependendo da sua lógica
+                                          _allExtractedGames.removeAt(index);
                                         });
                                       },
                                     ),
